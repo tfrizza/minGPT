@@ -14,12 +14,12 @@ import pdb
 import numpy as np
 import tensorflow as tf
 import tensorflow.keras as K
-from tensorflow.keras.layers import Dense, LayerNormalization, Dropout, Embedding
+from tensorflow.keras.layers import Dense, LayerNormalization, Dropout, Embedding, Lambda
 from tensorflow.keras.optimizers import Adam
 from tensorflow.keras.backend import count_params
-import tensorflow_addons as tfa
-from tensorflow_addons.optimizers import AdamW
-from tensorflow_addons.layers import GELU
+# import tensorflow_addons as tfa
+# from tensorflow_addons.optimizers import AdamW
+# from tensorflow_addons.layers import GELU
 
 logger = logging.getLogger(__name__)
 
@@ -147,8 +147,7 @@ class Block(K.layers.Layer):
         self.ln2 = LayerNormalization()
         self.attn = CausalSelfAttention(config)
         self.mlp = K.Sequential([
-            Dense(4 * config.n_embd, kernel_initializer='he_normal', bias_initializer='zeros'),
-            GELU(),
+            Dense(4 * config.n_embd, activation='gelu', kernel_initializer='he_normal', bias_initializer='zeros'),
             Dense(config.n_embd, kernel_initializer='he_normal', bias_initializer='zeros'),
             Dropout(config.resid_pdrop),
         ])

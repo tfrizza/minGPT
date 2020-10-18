@@ -9,12 +9,14 @@ def set_seed(seed):
 
 def top_k_logits(logits, k):
     v, ix = tf.math.top_k(logits, k)
-    out = tf.identity(logits).numpy()
-    # tf.tensor_scatter_nd_update(out, tf.cast(out < v[:,-1], tf.int32), tf.ones_like(out)*-float('Inf'))
-    out[out < v.numpy()[:, [-1]]] = -float('Inf')
+    out = tf.identity(logits)#.numpy()
+    out = tf.where(out < v[:,-1], x=-float('Inf'), y=out)
+#     tf.tensor_scatter_nd_update(out, tf.where(out < v[:,-1], tf.int32), tf.ones_like(out)*-float('Inf'))
+#     out[out < v.numpy()[:, [-1]]] = -float('Inf')
     # out[out < v[:, [-1]]] = -float('Inf')
     return out
 
+@tf.function
 def sample(model, x, steps, temperature=1.0, sample=False, top_k=None):
     """
     take a conditioning sequence of indices in x (of shape (b,t)) and predict the next token in
@@ -25,7 +27,7 @@ def sample(model, x, steps, temperature=1.0, sample=False, top_k=None):
     block_size = model.get_block_size()
     for k in range(steps):
         x_cond = x if x.shape[1] <= block_size else x[:, -block_size:] # crop context if needed
-        logits = model.predict(x_cond)
+        logits = model(x_cond, training=False)
         # pluck the logits at the final step and scale by temperature
         logits = logits[:, -1, :] / temperature
         # optionally crop probabilities to only the top k options
